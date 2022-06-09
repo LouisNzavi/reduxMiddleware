@@ -1,17 +1,46 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
+import { legacy_createStore as createStore } from "redux";
+import { applyMiddleware } from "redux";
+import App from "./App";
+import { counterReducer } from "./reducer";
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
+const myLogger = (store) => (next) => (action) => {
+  console.log("our middleware runs");
+  return next(action);
+};
+
+const secondMiddleware = (store) => (next) => (action) => {
+  console.log("our secondMiddleware runs");
+  return next(action);
+};
+
+const capAtTen = (store) => (next) => (action) => {
+  if (store.getState() >= 10) {
+    return next({ type: "DECREMENT" });
+  }
+  next(action);
+  //   console.log(store);
+};
+
+// const myLogger = (store) => {
+//   return (next) => {
+//     return (action) => {
+//       console.log("middleware runs");
+//       return next(action);
+//     };
+//   };
+// };
+
+const store = createStore(
+  counterReducer,
+  applyMiddleware(myLogger, secondMiddleware, capAtTen)
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+ReactDOM.render(
+  <Provider store={store}>
+    <App />
+  </Provider>,
+  document.getElementById("root")
+);
